@@ -1,13 +1,93 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  projects  Project[]
+  reactions Reaction[]
+  pins      Pin[]
+  replies   BlockReply[]
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  chats Chat[]
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  title     String
+  projectId String
+  createdAt DateTime @default(now())
+
+  project  Project   @relation(fields: [projectId], references: [id])
+  messages Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  chat   Chat    @relation(fields: [chatId], references: [id])
+  blocks Block[]
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  messageId String
+  index     Int
+  type      String
+  content   String
+  createdAt DateTime @default(now())
+
+  message   Message      @relation(fields: [messageId], references: [id])
+  reactions Reaction[]
+  replies   BlockReply[]
+  pins      Pin[]
+}
+
+model BlockReply {
+  id        String   @id @default(uuid())
+  blockId   String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  block Block @relation(fields: [blockId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Reaction {
+  id      String @id @default(uuid())
+  blockId String
+  userId  String
+  type    String
+
+  block Block @relation(fields: [blockId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Pin {
+  id      String @id @default(uuid())
+  blockId String
+  userId  String
+
+  block Block @relation(fields: [blockId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 }
